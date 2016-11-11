@@ -48,7 +48,6 @@ MAX_HARDFORK_SIGHASH_ID = 0xFFFFFF,  // fork id may not exceed maximum represent
 // MVF-Core TODO: Clarify why it's ok for testnet to deviate from the above rationale.
 //              One would expect regtestnet to be less important than a public network!
 static const CMessageHeader::MessageStartChars pchMessageStart_HardForkMainnet  = { 0xf9, 0xbe, 0xb4, 0xd9 },
-                                               pchMessageStart_HardForkNolnet   = { 0xfa, 0xce, 0xc4, 0xe9 },
                                                pchMessageStart_HardForkTestnet  = { 0x0b, 0x11, 0x09, 0x07 },
                                                pchMessageStart_HardForkRegtest  = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
