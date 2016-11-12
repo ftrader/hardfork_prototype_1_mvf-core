@@ -19,6 +19,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include "mvf-core.h"          // MVF-Core added
 
 #ifdef WIN32
 #include <string.h>
@@ -660,8 +661,12 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
 
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() ||
-            vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, nRecvVersion));
+            vRecvMsg.back().complete()) {
+            // MVF-Core begin use active magic
+            //vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, nRecvVersion));
+            vRecvMsg.push_back(CNetMessage(MVFActiveMessageStart(Params()), SER_NETWORK, nRecvVersion));
+            // MVF-Core end
+        }
 
         CNetMessage& msg = vRecvMsg.back();
 
@@ -2252,7 +2257,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
 
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
-    ssPeers << FLATDATA(Params().MessageStart());
+    ssPeers << FLATDATA(Params().MessageStart());   // MVF-Core ok to use historic magic for peers file
     ssPeers << addr;
     uint256 hash = Hash(ssPeers.begin(), ssPeers.end());
     ssPeers << hash;
@@ -2322,7 +2327,7 @@ bool CAddrDB::Read(CAddrMan& addr)
         ssPeers >> FLATDATA(pchMsgTmp);
 
         // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
+        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))  // MVF-Core ok to use historic magic for peers file
             return error("%s: Invalid network magic number", __func__);
 
         // de-serialize address data into one CAddrMan object
@@ -2446,7 +2451,10 @@ void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
 {
     ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
-    ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
+    // MVF-Core begin use active magic
+    //ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
+    ssSend << CMessageHeader(MVFActiveMessageStart(Params()), pszCommand, 0);
+    // MVF-Core end
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
 }
 
@@ -2520,7 +2528,7 @@ bool CBanDB::Write(const banmap_t& banSet)
 
     // serialize banlist, checksum data up to that point, then append csum
     CDataStream ssBanlist(SER_DISK, CLIENT_VERSION);
-    ssBanlist << FLATDATA(Params().MessageStart());
+    ssBanlist << FLATDATA(Params().MessageStart());  // MVF-Core ok to use historic magic for banlist
     ssBanlist << banSet;
     uint256 hash = Hash(ssBanlist.begin(), ssBanlist.end());
     ssBanlist << hash;
@@ -2590,7 +2598,7 @@ bool CBanDB::Read(banmap_t& banSet)
         ssBanlist >> FLATDATA(pchMsgTmp);
 
         // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
+        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))  // MVF-Core ok to use historic magic for banlist
             return error("%s: Invalid network magic number", __func__);
         
         // de-serialize address data into one CAddrMan object

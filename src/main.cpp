@@ -2407,7 +2407,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             CDiskBlockPos pos;
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock(): FindUndoPos failed");
-            if (!UndoWriteToDisk(blockundo, pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart()))
+            if (!UndoWriteToDisk(blockundo, pos, pindex->pprev->GetBlockHash(), MVFActiveMessageStart(chainparams)))  // MVF-Core changed to use active msg start
                 return AbortNode(state, "Failed to write undo data");
 
             // update nUndoPos in block index
@@ -3508,7 +3508,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
         if (!FindBlockPos(state, blockPos, nBlockSize+8, nHeight, block.GetBlockTime(), dbp != NULL))
             return error("AcceptBlock(): FindBlockPos failed");
         if (dbp == NULL)
-            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
+            if (!WriteBlockToDisk(block, blockPos, MVFActiveMessageStart(chainparams)))  // MVF-Core changed to use active msg start
                 AbortNode(state, "Failed to write block");
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
             return error("AcceptBlock(): ReceivedBlockTransactions failed");
@@ -4038,7 +4038,7 @@ bool InitBlockIndex(const CChainParams& chainparams)
             CValidationState state;
             if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
                 return error("LoadBlockIndex(): FindBlockPos failed");
-            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
+            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))   // MVF-Core: ok to use pre-fork magic to write genesis block
                 return error("LoadBlockIndex(): writing genesis block to disk failed");
             CBlockIndex *pindex = AddToBlockIndex(block);
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
@@ -4079,8 +4079,19 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 blkdat.FindByte(chainparams.MessageStart()[0]);
                 nRewind = blkdat.GetPos()+1;
                 blkdat >> FLATDATA(buf);
-                if (memcmp(buf, chainparams.MessageStart(), MESSAGE_START_SIZE))
-                    continue;
+                // MVF-Core: we first check for regular header, then forked header (MVHF-CORE-DES-NSEP-?)
+                if (memcmp(buf, chainparams.MessageStart(), MESSAGE_START_SIZE)) {
+                    // pre-fork magic didn't match, so try forked magic
+                    blkdat.SetPos(nRewind-1);
+                    blkdat.FindByte(chainparams.MVFMessageStart()[0]);
+                    nRewind = blkdat.GetPos()+1;
+                    blkdat >> FLATDATA(buf);
+                    if (memcmp(buf, chainparams.MVFMessageStart(), MESSAGE_START_SIZE)) {
+                        // still no match
+                        continue;
+                    }
+                }
+                // MVF-Core end
                 // read size
                 blkdat >> nSize;
                 if (nSize < 80 || nSize > MAX_BLOCK_SIZE)
@@ -5584,19 +5595,23 @@ bool ProcessMessages(CNode* pfrom)
         it++;
 
         // Scan for message start
-        if (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), MESSAGE_START_SIZE) != 0) {
+        // MVF-Core begin use active magic
+        if (memcmp(msg.hdr.pchMessageStart, MVFActiveMessageStart(chainparams), MESSAGE_START_SIZE) != 0) {
             LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
             fOk = false;
             break;
         }
+        // MVF-Core end
 
         // Read header
         CMessageHeader& hdr = msg.hdr;
-        if (!hdr.IsValid(chainparams.MessageStart()))
+        // MVF-Core begin use active magic
+        if (!hdr.IsValid(MVFActiveMessageStart(chainparams)))
         {
             LogPrintf("PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
             continue;
         }
+        // MVF-Core end
         string strCommand = hdr.GetCommand();
 
         // Message size

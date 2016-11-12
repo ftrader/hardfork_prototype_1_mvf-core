@@ -169,3 +169,13 @@ void DeactivateFork(void)
         isMVFHardForkActive = false;
     }
 }
+
+const CMessageHeader::MessageStartChars& MVFActiveMessageStart(const CChainParams& chainparams)
+{
+    if (!isMVFHardForkActive) {
+        return chainparams.MessageStart();     // the pre-fork network magic
+    }
+    else {
+        return chainparams.MVFMessageStart();  // the fork's new network magic
+    }
+}

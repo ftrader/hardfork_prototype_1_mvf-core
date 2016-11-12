@@ -66,4 +66,6 @@ extern void ForkSetup(const CChainParams& chainparams);  // actions to perform a
 extern void ActivateFork(void);    // actions to perform at fork triggering (MVHF-CORE-DES-TRIG-6)
 extern void DeactivateFork(void);  // actions to revert if reorg deactivates fork (MVHF-CORE-DES-TRIG-7)
 
+extern const CMessageHeader::MessageStartChars& MVFActiveMessageStart(const CChainParams& chainparams);
+
 #endif

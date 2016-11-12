@@ -109,6 +109,12 @@ public:
         pchMessageStart[1] = 0xbe;
         pchMessageStart[2] = 0xb4;
         pchMessageStart[3] = 0xd9;
+        // MFV-Core NSEP begin
+        pchMVFMessageStart[0] = pchMessageStart_HardForkMainnet[0];
+        pchMVFMessageStart[1] = pchMessageStart_HardForkMainnet[1];
+        pchMVFMessageStart[2] = pchMessageStart_HardForkMainnet[2];
+        pchMVFMessageStart[3] = pchMessageStart_HardForkMainnet[3];
+        // MFV-Core end
         vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
         nDefaultPort = 8333;
         nMaxTipAge = 24 * 60 * 60;
@@ -208,6 +214,12 @@ public:
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
         pchMessageStart[3] = 0x07;
+        // MFV-Core NSEP begin
+        pchMVFMessageStart[0] = pchMessageStart_HardForkTestnet[0];
+        pchMVFMessageStart[1] = pchMessageStart_HardForkTestnet[1];
+        pchMVFMessageStart[2] = pchMessageStart_HardForkTestnet[2];
+        pchMVFMessageStart[3] = pchMessageStart_HardForkTestnet[3];
+        // MFV-Core end
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 18333;
         nMaxTipAge = 0x7fffffff;
@@ -291,6 +303,12 @@ public:
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
+        // MFV-Core NSEP begin
+        pchMVFMessageStart[0] = pchMessageStart_HardForkRegtest[0];
+        pchMVFMessageStart[1] = pchMessageStart_HardForkRegtest[1];
+        pchMVFMessageStart[2] = pchMessageStart_HardForkRegtest[2];
+        pchMVFMessageStart[3] = pchMessageStart_HardForkRegtest[3];
+        // MFV-Core end
         nMaxTipAge = 24 * 60 * 60;
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
