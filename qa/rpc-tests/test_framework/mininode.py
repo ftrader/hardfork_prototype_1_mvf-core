@@ -1194,6 +1194,7 @@ class NodeConn(asyncore.dispatcher):
             if len(self.recvbuf) < 4:
                 return
             if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
+                self.show_debug_msg("got_data bad magic: %s" % "".join(["%x" % i for i in self.recvbuf[0:4]]))
                 raise ValueError("got garbage %s" % repr(self.recvbuf))
             if self.ver_recv < 209:
                 if len(self.recvbuf) < 4 + 12 + 4:
