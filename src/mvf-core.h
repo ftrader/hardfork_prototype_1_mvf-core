@@ -49,7 +49,7 @@ MAX_HARDFORK_SIGHASH_ID = 0xFFFFFF,  // fork id may not exceed maximum represent
 //              One would expect regtestnet to be less important than a public network!
 static const CMessageHeader::MessageStartChars pchMessageStart_HardForkMainnet  = { 0xf9, 0xbe, 0xb4, 0xd9 },
                                                pchMessageStart_HardForkTestnet  = { 0x0b, 0x11, 0x09, 0x07 },
-                                               pchMessageStart_HardForkRegtest  = { 0xf9, 0xbe, 0xb4, 0xd9 };
+                                               pchMessageStart_HardForkRegtest  = { 0xf9, 0xbe, 0xb4, 0xd9 };  // was: fabfb5da
 
 // MVHF-CORE-DES-DIAD-1 - difficulty adjustment parameter defaults
 // MVF-Core TODO: calibrate the values for public testnets according to estimated initial present hashpower
