@@ -91,6 +91,7 @@ testScripts = [
     'httpbasics.py',
     'multi_rpc.py',
     'mvf-core-trig.py',  # MVF-Core
+    'mvf-core-nsep-magic.py',  # MVF-Core
     'zapwallettxes.py',
     'proxy_test.py',
     'merkle_blocks.py',
