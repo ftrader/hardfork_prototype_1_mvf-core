@@ -60,7 +60,7 @@ std::string ForkCmdLineHelp()
 void ForkSetup(const CChainParams& chainparams)
 {
     int minForkHeightForNetwork = 0;
-    std:string activeNetworkID = chainparams.NetworkIDString();
+    string activeNetworkID = chainparams.NetworkIDString();
 
     LogPrintf("%s: MVF: doing setup\n", __func__);
     LogPrintf("%s: MVF: active network = %s\n", __func__, activeNetworkID);
@@ -112,9 +112,6 @@ void ForkSetup(const CChainParams& chainparams)
         LogPrintf("%s: MVF: no marker config file at %s - client has not forked yet\n", __func__, pathBTCforkConfigFile.string().c_str());
         wasMVFHardForkPreviouslyActivated = false;
     }
-
-    // we should always set the activation flag to false during setup
-    isMVFHardForkActive = false;
 }
 
 
@@ -173,10 +170,12 @@ void DeactivateFork(void)
 
 const CMessageHeader::MessageStartChars& MVFActiveMessageStart(const CChainParams& chainparams)
 {
-    if (!isMVFHardForkActive) {
+    if (!wasMVFHardForkPreviouslyActivated && !isMVFHardForkActive) {
+        LogPrintf("%s: MVF: MVFActiveMessageStart(): returning pre-fork netmagic\n", __func__);
         return chainparams.MessageStart();     // the pre-fork network magic
     }
     else {
+        LogPrintf("%s: MVF: MVFActiveMessageStart(): returning forked netmagic\n", __func__);
         return chainparams.MVFMessageStart();  // the fork's new network magic
     }
 }

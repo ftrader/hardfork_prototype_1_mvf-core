@@ -5568,6 +5568,7 @@ bool ProcessMessages(CNode* pfrom)
     //  (x) data
     //
     bool fOk = true;
+    bool fMagicExemption = false;  // MVF-Core set only to exempt fork magic in special pre-fork conditions
 
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(pfrom, chainparams.GetConsensus());
@@ -5598,7 +5599,18 @@ bool ProcessMessages(CNode* pfrom)
 
         // Scan for message start
         // MVF-Core begin use active magic
-        if (memcmp(msg.hdr.pchMessageStart, MVFActiveMessageStart(chainparams), MESSAGE_START_SIZE) != 0) {
+        if (memcmp(msg.hdr.pchMessageStart, MVFActiveMessageStart(chainparams), MESSAGE_START_SIZE) == 0) {
+            LogPrintf("MVF: valid current magic %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
+        }
+        else if (memcmp(msg.hdr.pchMessageStart, chainparams.MVFMessageStart(), MESSAGE_START_SIZE) == 0) {
+            LogPrintf("MVF: just before fork, comparing to forked magic %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
+            // new netmagic - under certain conditions around the fork, accept this
+            if (!isMVFHardForkActive && (chainActive.Height() == (FinalActivateForkHeight-1))) {
+                LogPrintf("MVF: just before fork, accepting forked magic %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
+                fMagicExemption = true;
+            }
+        }
+        else {
             LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
             fOk = false;
             break;
@@ -5608,7 +5620,7 @@ bool ProcessMessages(CNode* pfrom)
         // Read header
         CMessageHeader& hdr = msg.hdr;
         // MVF-Core begin use active magic
-        if (!hdr.IsValid(MVFActiveMessageStart(chainparams)))
+        if (!fMagicExemption && !hdr.IsValid(MVFActiveMessageStart(chainparams)))
         {
             LogPrintf("PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
             continue;
