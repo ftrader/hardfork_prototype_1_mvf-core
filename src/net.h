@@ -349,6 +349,7 @@ public:
     bool fInbound;
     bool fNetworkNode;
     bool fSuccessfullyConnected;
+    bool fForked;     // MVF-Core added: set to true when forked netmagic is received from peer
     bool fDisconnect;
     // We use fRelayTxes for two purposes -
     // a) it allows us to not relay tx invs before receiving the peer's version message

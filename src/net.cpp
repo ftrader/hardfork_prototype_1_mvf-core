@@ -663,7 +663,6 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         if (vRecvMsg.empty() ||
             vRecvMsg.back().complete()) {
             // MVF-Core begin use active magic
-            //vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, nRecvVersion));
             vRecvMsg.push_back(CNetMessage(MVFActiveMessageStart(Params()), SER_NETWORK, nRecvVersion));
             // MVF-Core end
         }
@@ -2367,6 +2366,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fInbound = fInboundIn;
     fNetworkNode = false;
     fSuccessfullyConnected = false;
+    fForked = false;   // MVF-Core added
     fDisconnect = false;
     nRefCount = 0;
     nSendSize = 0;
@@ -2452,8 +2452,14 @@ void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
     ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
     // MVF-Core begin use active magic
-    //ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
-    ssSend << CMessageHeader(MVFActiveMessageStart(Params()), pszCommand, 0);
+    if (fForked || isMVFHardForkActive) {
+        ssSend << CMessageHeader(Params().MVFMessageStart(), pszCommand, 0);
+        LogPrint("net", "MVF sending with forked magic: %s ", SanitizeString(pszCommand));
+    }
+    else {
+        ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
+        LogPrint("net", "MVF sending with pre-fork magic: %s ", SanitizeString(pszCommand));
+    }
     // MVF-Core end
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
 }

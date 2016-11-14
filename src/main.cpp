@@ -5568,7 +5568,6 @@ bool ProcessMessages(CNode* pfrom)
     //  (x) data
     //
     bool fOk = true;
-    bool fMagicExemption = false;  // MVF-Core set only to exempt fork magic in special pre-fork conditions
 
     if (!pfrom->vRecvGetData.empty())
         ProcessGetData(pfrom, chainparams.GetConsensus());
@@ -5607,7 +5606,7 @@ bool ProcessMessages(CNode* pfrom)
             // new netmagic - under certain conditions around the fork, accept this
             if (!isMVFHardForkActive && (chainActive.Height() == (FinalActivateForkHeight-1))) {
                 LogPrintf("MVF: just before fork, accepting forked magic %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
-                fMagicExemption = true;
+                pfrom->fForked = true;
             }
         }
         else {
@@ -5620,10 +5619,28 @@ bool ProcessMessages(CNode* pfrom)
         // Read header
         CMessageHeader& hdr = msg.hdr;
         // MVF-Core begin use active magic
-        if (!fMagicExemption && !hdr.IsValid(MVFActiveMessageStart(chainparams)))
-        {
-            LogPrintf("PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
-            continue;
+        if (!pfrom->fForked) {
+            if (isMVFHardForkActive) {
+                if (!hdr.IsValid(MVFActiveMessageStart(chainparams)))
+                {
+                    LogPrintf("PROCESSMESSAGE: ERRORS IN FORKED HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
+                    continue;
+                }
+            }
+            else {
+                if (!hdr.IsValid(chainparams.MessageStart()))
+                {
+                    LogPrintf("PROCESSMESSAGE: ERRORS IN UNFORKED HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
+                    continue;
+                }
+            }
+        }
+        else {
+            if (!hdr.IsValid(chainparams.MVFMessageStart()))
+            {
+                LogPrintf("PROCESSMESSAGE: ERRORS IN FORKED HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
+                continue;
+            }
         }
         // MVF-Core end
         string strCommand = hdr.GetCommand();
