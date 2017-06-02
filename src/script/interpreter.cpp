@@ -1129,7 +1129,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
     // MVF-Core TODO: apply the active forkid if we're hashing to produce a signature
-    ss << txTmp << ((nChainId << 1) | nHashType);
+    ss << txTmp << ((nChainId << 8) | nHashType);
     return ss.GetHash();
 }
 
